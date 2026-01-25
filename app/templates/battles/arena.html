@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Battle Arena - {{ project.name }} - ELO Ranker{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <a href="{{ url_for('projects.detail', project_id=project.id) }}" class="text-indigo-600 hover:text-indigo-800 text-sm">
+                &larr; Back to {{ project.name }}
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900 mt-2">Battle Arena</h1>
+        </div>
+        <div class="text-right">
+            <div class="text-2xl font-bold text-indigo-600" id="battle-count">0</div>
+            <div class="text-sm text-gray-500">battles this session</div>
+        </div>
+    </div>
+</div>
+
+<!-- Battle Controls -->
+<div class="flex justify-center space-x-4 mb-6">
+    <select id="strategy" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+        <option value="random">Random Matchup</option>
+        <option value="least_compared">Least Compared</option>
+        <option value="close_rating">Similar Ratings</option>
+    </select>
+    <a href="{{ url_for('battles.history', project_id=project.id) }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-sm">
+        View History
+    </a>
+</div>
+
+<!-- Battle Arena -->
+<div id="arena" class="max-w-4xl mx-auto">
+    <!-- Loading State -->
+    <div id="loading" class="text-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+        <p class="mt-4 text-gray-600">Loading matchup...</p>
+    </div>
+
+    <!-- Battle Cards -->
+    <div id="battle-cards" class="hidden">
+        <p class="text-center text-gray-600 mb-6">Which do you prefer?</p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Item A -->
+            <div id="card-a" class="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg hover:border-indigo-300 border-2 border-transparent transition-all relative" onclick="submitBattle('a_wins')">
+                <button onclick="deleteItem(event, 'a')" class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-bold transition-colors" title="Delete this item">
+                    ×
+                </button>
+                <div class="text-center">
+                    <h2 id="name-a" class="text-xl font-bold text-gray-900 mb-2"></h2>
+                    <div class="text-3xl font-bold text-indigo-600" id="rating-a"></div>
+                    <div class="text-sm text-gray-500">Current Rating</div>
+                    <div class="mt-4 text-sm text-gray-500" id="stats-a"></div>
+                </div>
+            </div>
+
+            <!-- Item B -->
+            <div id="card-b" class="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg hover:border-indigo-300 border-2 border-transparent transition-all relative" onclick="submitBattle('b_wins')">
+                <button onclick="deleteItem(event, 'b')" class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-bold transition-colors" title="Delete this item">
+                    ×
+                </button>
+                <div class="text-center">
+                    <h2 id="name-b" class="text-xl font-bold text-gray-900 mb-2"></h2>
+                    <div class="text-3xl font-bold text-indigo-600" id="rating-b"></div>
+                    <div class="text-sm text-gray-500">Current Rating</div>
+                    <div class="mt-4 text-sm text-gray-500" id="stats-b"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tie / Skip buttons -->
+        <div class="flex justify-center mt-6 space-x-4">
+            {% if project.settings.allow_ties %}
+            <button onclick="submitBattle('tie')" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                It's a Tie
+            </button>
+            {% endif %}
+            <button onclick="loadNextBattle()" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                Skip
+            </button>
+        </div>
+    </div>
+
+    <!-- Result Display -->
+    <div id="result" class="hidden text-center py-8">
+        <div id="result-message" class="text-xl font-semibold mb-4"></div>
+        <div id="rating-changes" class="text-gray-600 mb-6"></div>
+        <button onclick="loadNextBattle()" class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+            Next Battle
+        </button>
+    </div>
+</div>
+
+<!-- Keyboard Shortcuts Info -->
+<div class="mt-8 text-center text-sm text-gray-500">
+    <p>Keyboard shortcuts: <kbd class="px-2 py-1 bg-gray-100 rounded">1</kbd> for left, <kbd class="px-2 py-1 bg-gray-100 rounded">2</kbd> for right, <kbd class="px-2 py-1 bg-gray-100 rounded">T</kbd> for tie, <kbd class="px-2 py-1 bg-gray-100 rounded">S</kbd> to skip</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const projectId = '{{ project.id }}';
+const csrfToken = '{{ csrf_token() }}';
+let currentPair = null;
+let battleCount = 0;
+
+async function loadNextBattle() {
+    // Show loading
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('battle-cards').classList.add('hidden');
+    document.getElementById('result').classList.add('hidden');
+
+    const strategy = document.getElementById('strategy').value;
+
+    try {
+        const response = await fetch(`/api/v1/projects/${projectId}/pair?strategy=${strategy}`);
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        currentPair = data;
+        displayPair(data.item_a, data.item_b);
+    } catch (error) {
+        console.error('Error loading battle pair:', error);
+        alert('Failed to load battle pair');
+    }
+}
+
+function displayPair(itemA, itemB) {
+    document.getElementById('name-a').textContent = itemA.name;
+    document.getElementById('rating-a').textContent = itemA.rating;
+    document.getElementById('stats-a').textContent = `${itemA.stats.wins}W / ${itemA.stats.losses}L / ${itemA.stats.ties}T`;
+
+    document.getElementById('name-b').textContent = itemB.name;
+    document.getElementById('rating-b').textContent = itemB.rating;
+    document.getElementById('stats-b').textContent = `${itemB.stats.wins}W / ${itemB.stats.losses}L / ${itemB.stats.ties}T`;
+
+    // Re-enable cards (remove disabled state from previous battle)
+    const battleCards = document.getElementById('battle-cards');
+    battleCards.classList.remove('pointer-events-none', 'opacity-50');
+
+    // Show cards
+    document.getElementById('loading').classList.add('hidden');
+    battleCards.classList.remove('hidden');
+}
+
+async function submitBattle(result) {
+    if (!currentPair) return;
+
+    // Disable buttons temporarily
+    document.getElementById('battle-cards').classList.add('pointer-events-none', 'opacity-50');
+
+    try {
+        const response = await fetch(`/api/v1/projects/${projectId}/battle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                item_a_id: currentPair.item_a.id,
+                item_b_id: currentPair.item_b.id,
+                result: result
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+            document.getElementById('battle-cards').classList.remove('pointer-events-none', 'opacity-50');
+            return;
+        }
+
+        battleCount++;
+        document.getElementById('battle-count').textContent = battleCount;
+
+        showResult(data.battle, result);
+    } catch (error) {
+        console.error('Error submitting battle:', error);
+        alert('Failed to submit battle');
+        document.getElementById('battle-cards').classList.remove('pointer-events-none', 'opacity-50');
+    }
+}
+
+function showResult(battle, result) {
+    let message = '';
+    if (result === 'a_wins') {
+        message = `${battle.item_a_name} wins!`;
+    } else if (result === 'b_wins') {
+        message = `${battle.item_b_name} wins!`;
+    } else {
+        message = "It's a tie!";
+    }
+
+    const changeA = battle.rating_changes.item_a;
+    const changeB = battle.rating_changes.item_b;
+    const changesText = `${battle.item_a_name}: ${battle.ratings_after.item_a} (${changeA >= 0 ? '+' : ''}${changeA}) | ${battle.item_b_name}: ${battle.ratings_after.item_b} (${changeB >= 0 ? '+' : ''}${changeB})`;
+
+    document.getElementById('result-message').textContent = message;
+    document.getElementById('rating-changes').textContent = changesText;
+
+    document.getElementById('battle-cards').classList.add('hidden');
+    document.getElementById('result').classList.remove('hidden');
+}
+
+async function deleteItem(event, side) {
+    // Prevent the card click from firing
+    event.stopPropagation();
+
+    if (!currentPair) return;
+
+    const item = side === 'a' ? currentPair.item_a : currentPair.item_b;
+    const itemName = item.name;
+    const itemId = item.id;
+
+    // Show confirmation dialog
+    if (!confirm(`Are you sure you want to delete "${itemName}"?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+
+    // Show loading state
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('battle-cards').classList.add('hidden');
+
+    try {
+        // Delete the item
+        const response = await fetch(`/api/v1/projects/${projectId}/items/${itemId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+            // Restore the battle cards
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('battle-cards').classList.remove('hidden');
+            return;
+        }
+
+        // Load replacement item for the deleted side
+        await loadReplacementItem(side);
+
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        alert('Failed to delete item');
+        // Restore the battle cards
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('battle-cards').classList.remove('hidden');
+    }
+}
+
+async function loadReplacementItem(sideToReplace) {
+    const strategy = document.getElementById('strategy').value;
+    const keepSide = sideToReplace === 'a' ? 'b' : 'a';
+    const keepItemId = currentPair[`item_${keepSide}`].id;
+
+    try {
+        const response = await fetch(`/api/v1/projects/${projectId}/pair?strategy=${strategy}&exclude=${keepItemId}`);
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+            // If we can't get a replacement, load a completely new battle
+            await loadNextBattle();
+            return;
+        }
+
+        // Update the pair: keep one item, replace the other
+        if (sideToReplace === 'a') {
+            currentPair.item_a = data.item_a;
+        } else {
+            currentPair.item_b = data.item_a;
+        }
+
+        // Display the updated pair
+        displayPair(currentPair.item_a, currentPair.item_b);
+
+    } catch (error) {
+        console.error('Error loading replacement item:', error);
+        alert('Failed to load replacement item');
+        await loadNextBattle();
+    }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (document.getElementById('battle-cards').classList.contains('hidden')) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            loadNextBattle();
+        }
+        return;
+    }
+
+    switch (e.key) {
+        case '1':
+            submitBattle('a_wins');
+            break;
+        case '2':
+            submitBattle('b_wins');
+            break;
+        case 't':
+        case 'T':
+            submitBattle('tie');
+            break;
+        case 's':
+        case 'S':
+            loadNextBattle();
+            break;
+    }
+});
+
+// Load first battle on page load
+loadNextBattle();
+</script>
+{% endblock %}
