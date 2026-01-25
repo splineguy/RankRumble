@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} - ELO Ranker{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <a href="{{ url_for('projects.detail', project_id=project.id) }}" class="text-indigo-600 hover:text-indigo-800 text-sm">
+        &larr; Back to {{ project.name }}
+    </a>
+</div>
+
+<div class="grid md:grid-cols-3 gap-6">
+    <!-- Item Info -->
+    <div class="md:col-span-2">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-start mb-4">
+                <h1 class="text-2xl font-bold text-gray-900">{{ item.name }}</h1>
+                <a href="{{ url_for('projects.edit_item', project_id=project.id, item_id=item.id) }}" class="text-gray-600 hover:text-gray-800">
+                    Edit
+                </a>
+            </div>
+
+            {% if item.metadata and item.metadata.notes %}
+                <p class="text-gray-600 mb-4">{{ item.metadata.notes }}</p>
+            {% endif %}
+
+            <!-- Rating Chart -->
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold mb-4">Rating History</h3>
+                <canvas id="ratingChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Battles -->
+        <div class="bg-white rounded-lg shadow-md mt-6 overflow-hidden">
+            <div class="px-6 py-4 border-b">
+                <h3 class="text-lg font-semibold">Recent Battles</h3>
+            </div>
+
+            {% if battles %}
+            <div class="divide-y">
+                {% for battle in battles %}
+                <div class="px-6 py-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            {% if battle.result == 'a_wins' %}
+                                {% if battle.item_a_id == item.id %}
+                                    <span class="text-green-600 font-medium">Won</span> vs {{ battle.item_b_name }}
+                                {% else %}
+                                    <span class="text-red-600 font-medium">Lost</span> vs {{ battle.item_a_name }}
+                                {% endif %}
+                            {% elif battle.result == 'b_wins' %}
+                                {% if battle.item_b_id == item.id %}
+                                    <span class="text-green-600 font-medium">Won</span> vs {{ battle.item_a_name }}
+                                {% else %}
+                                    <span class="text-red-600 font-medium">Lost</span> vs {{ battle.item_b_name }}
+                                {% endif %}
+                            {% else %}
+                                <span class="text-yellow-600 font-medium">Tie</span> with
+                                {% if battle.item_a_id == item.id %}{{ battle.item_b_name }}{% else %}{{ battle.item_a_name }}{% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            {% set change = battle.rating_changes.item_a if battle.item_a_id == item.id else battle.rating_changes.item_b %}
+                            {% if change > 0 %}
+                                <span class="text-green-600">+{{ change }}</span>
+                            {% elif change < 0 %}
+                                <span class="text-red-600">{{ change }}</span>
+                            {% else %}
+                                <span>0</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-6 text-center text-gray-500">
+                No battles yet
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats Sidebar -->
+    <div class="space-y-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Stats</h3>
+
+            <div class="text-center mb-6">
+                <div class="text-4xl font-bold text-indigo-600">{{ item.rating }}</div>
+                <div class="text-sm text-gray-500">Current Rating</div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Total Battles</span>
+                    <span class="font-semibold">{{ item.stats.total_battles }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Wins</span>
+                    <span class="font-semibold text-green-600">{{ item.stats.wins }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Losses</span>
+                    <span class="font-semibold text-red-600">{{ item.stats.losses }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Ties</span>
+                    <span class="font-semibold text-yellow-600">{{ item.stats.ties }}</span>
+                </div>
+                <div class="border-t pt-4 flex justify-between">
+                    <span class="text-gray-500">Win Rate</span>
+                    <span class="font-semibold">
+                        {% if item.stats.total_battles > 0 %}
+                            {{ (item.stats.win_rate * 100)|round(1) }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const ratingHistory = {{ item.stats.rating_history | tojson }};
+
+if (ratingHistory.length > 1) {
+    const ctx = document.getElementById('ratingChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ratingHistory.map((r, i) => i === 0 ? 'Start' : `#${i}`),
+            datasets: [{
+                label: 'Rating',
+                data: ratingHistory.map(r => r.rating),
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+} else {
+    document.getElementById('ratingChart').parentElement.innerHTML = '<p class="text-gray-500 text-center">Not enough data for chart yet</p>';
+}
+</script>
+{% endblock %}
