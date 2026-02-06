@@ -1,156 +1,107 @@
-Below is a sample **README.md** you can adapt for your own GitHub repository. It explains what the project does, how to set it up, and how to use it. Feel free to customize wording or structure as needed.
+# RankRumble
 
----
+**Battle it out. Crown the best.**
 
-# Interactive Movie Ratings with Elo
-
-This repository contains a Python script that implements a **menu-driven, Elo-based** rating system for movies. You can load movie titles from a text file, load existing Elo ratings from a JSON file, perform pairwise comparisons between random movie pairs, update the ratings accordingly, and save your progress to JSON for future sessions.
+RankRumble is a web app that lets you rank anything using the ELO rating system. Compare items head-to-head, watch ratings evolve over time, and run Sweet Sixteen double-elimination tournaments to crown a champion.
 
 ## Features
 
-1. **Load Movies from TXT**  
-   Read a list of movies from a plain-text file where each line represents a movie title.
+- **ELO Battle Arena** — Compare two items side-by-side. Pick your favorite and watch ratings update in real time. Multiple matchup strategies: random, least compared, or similar ratings.
+- **Sweet Sixteen Tournament** — Select 16 items for a full double-elimination bracket. Winners bracket, losers bracket, grand final, and a reset match if the underdog wins. Every match updates ELO ratings. Confetti when a champion is crowned.
+- **Rankings & Charts** — Full sortable rankings with Chart.js visualizations. Track win rates, battle history, and rating progression over time for every item.
+- **Multi-Project Support** — Create unlimited ranking projects: movies, restaurants, albums, games — anything you want to compare.
+- **Import & Export** — Bulk import items from TXT, CSV, or JSON files. Export rankings as CSV or JSON.
+- **User Accounts** — Multi-user support with secure authentication. Each user has their own projects and data.
 
-2. **Load/Save Ratings from/to JSON**  
-   Maintain a persistent dictionary of `{movie: elo_rating}`, so you can resume partial progress any time.
+## Tech Stack
 
-3. **Menu-Driven**  
-   A clear command-line menu guides you through all operations:
-   - **(1)** Read movies from a TXT file  
-   - **(2)** Read ratings from a JSON file  
-   - **(3)** Begin pairwise comparisons and choose your preferred movie in each matchup  
-   - **(4)** Save your current ratings to JSON  
-   - **(5)** Print out current rankings (with an option to specify how many top movies to view)  
-   - **(q)** Quit
+- **Backend:** Flask, Flask-Login, Flask-WTF, Bcrypt
+- **Frontend:** Jinja2 templates, Tailwind CSS, vanilla JavaScript, Chart.js
+- **Storage:** JSON file-based with thread-safe file locking
+- **Server:** Gunicorn (production), Flask dev server (development)
 
-4. **Elo Rating System**  
-   Each time you pick a “winner” in a comparison, the script updates the winner’s rating up and the loser’s rating down according to the Elo formula. Upsets (lower-rated movie winning) cause larger rating swings, while matches that go as “expected” cause smaller changes.
+## Quick Start
 
-## Requirements
+```bash
+# Clone the repo
+git clone https://github.com/splineguy/ELO_Sorting.git
+cd ELO_Sorting
 
-- Python 3.7+ (earlier versions may also work, but 3.7+ is recommended)
-- No third-party dependencies are required—only the standard Python library.
+# Create a virtual environment
+python -m venv venv
+source venv/bin/activate
 
-## Setup
+# Install dependencies
+pip install -r requirements.txt
 
-1. **Clone this Repository**  
-   ```bash
-   git clone https://github.com/YourUsername/your-repo-name.git
-   cd your-repo-name
-   ```
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your secret key
 
-2. **(Optional) Create a Virtual Environment**  
-   ```bash
-   python -m venv env
-   source env/bin/activate   # Mac/Linux
-   # or on Windows:
-   # .\env\Scripts\activate
-   ```
-
-3. **Install Requirements**  
-   There are no external libraries needed, but if you plan to add any, you can specify them in a `requirements.txt` or `pyproject.toml`. For now, this project uses just the Python standard library.
-
-## Usage
-
-1. **Create a Text File**  
-   Create a file named `movies.txt` (or another name) in the same directory, with one movie title per line. For example:
-
-   ```
-   The Matrix
-   Inception
-   Spider-Man
-   Ghostbusters
-   ```
-
-2. **Run the Script**  
-   ```bash
-   python main.py
-   ```
-   You’ll see a menu with the following options:
-
-   ```
-   MENU:
-     1. Read movies from TXT file
-     2. Read ratings from JSON file
-     3. Begin pairwise comparisons
-     4. Save current rankings to JSON
-     5. Print current list with scores sorted
-     q. Quit
-   ```
-
-3. **Load Movies**  
-   - Choose **1** to load your movie list from `movies.txt`.  
-   - Any movie not yet in the rating dictionary is assigned a **default Elo rating** (e.g., 1000).
-
-4. **(Optional) Load Existing Ratings**  
-   - If you have a `ratings.json` file from a previous session, choose **2**.  
-   - This merges those stored ratings into the in-memory rating dictionary.
-
-5. **Begin Pairwise Comparisons**  
-   - Choose **3** to compare random pairs. When asked:
-     ```
-     Which movie do you prefer?
-       1) Movie A (rating: 1000)
-       2) Movie B (rating: 1000)
-     Choose 1 or 2 (or 'q' to stop):
-     ```
-     Type `1` or `2`, and the script updates the Elo ratings.
-
-6. **Save Current Ratings**  
-   - Choose **4** to save your ratings out to `ratings.json` (or another chosen filename).
-
-7. **Print Current Ranking**  
-   - Choose **5** to see a sorted list of your movies by rating. You can specify how many top movies to display.
-
-8. **Quit**  
-   - Type **q** to exit the program. You can pick up where you left off by loading `ratings.json` next time.
-
-## Example
-
-Here’s a small sample interaction (simplified):
-
-```
-MENU:
-  1. Read movies from TXT file
-  2. Read ratings from JSON file
-  3. Begin pairwise comparisons
-  4. Save current rankings to JSON
-  5. Print current list with scores sorted
-  q. Quit
-Choose an option: 1
-Enter TXT filename [movies.txt]: 
-Loaded 4 movies from movies.txt.
-Now have 4 total movies in the system.
-
-MENU:
-  1. Read movies from TXT file
-  2. ...
-Choose an option: 3
-
-Beginning pairwise comparisons. Type 'q' to exit this mode.
-
-Which movie do you prefer?
-  1) The Matrix (rating: 1000)
-  2) Inception (rating: 1000)
-Choose 1 or 2 (or 'q' to stop): 1
-You chose 'The Matrix'. Elo updated!
-
-Which movie do you prefer?
-  1) Spider-Man (rating: 1000)
-  2) Ghostbusters (rating: 1000)
-Choose 1 or 2 (or 'q' to stop): q
-
-Returning to menu...
+# Run the app
+python run.py
 ```
 
-## Contributing
+The app will be available at **http://localhost:5001**.
 
-Contributions are welcome! Feel free to open issues or submit pull requests if you:
+## Project Structure
 
-- Have a bug fix or performance improvement.
-- Want to add a new feature or refine how pairs are chosen.
-- Want to introduce a different rating system or user interface.
+```
+app/
+├── __init__.py              # App factory
+├── config.py                # Configuration
+├── core/
+│   └── elo.py               # ELO rating algorithm
+├── models/
+│   ├── user.py              # User management
+│   ├── project.py           # Project & battle management
+│   ├── tournament.py        # Double-elimination tournaments
+│   └── storage.py           # Thread-safe JSON storage
+├── blueprints/
+│   ├── auth/                # Login, register, logout
+│   ├── projects/            # Project CRUD, items, import/export
+│   ├── battles/             # Battle arena & history
+│   ├── tournament/          # Tournament setup, bracket, play
+│   └── api/                 # REST API for AJAX operations
+├── templates/               # Jinja2 HTML templates
+└── static/                  # CSS and assets
+```
+
+## How ELO Works
+
+Each item starts with a default rating (1000). When two items battle:
+
+1. **Expected scores** are calculated based on current ratings
+2. The winner's rating goes up, the loser's goes down
+3. Upsets (lower-rated beating higher-rated) cause bigger swings
+4. The **K-factor** controls how much ratings change per battle (configurable per project)
+
+## Sweet Sixteen Tournament
+
+The tournament uses a standard 16-seed double-elimination format:
+
+- **Winners Bracket:** 4 rounds (8 → 4 → 2 → 1 matches)
+- **Losers Bracket:** 6 rounds — lose once and you drop here; lose twice and you're out
+- **Grand Final:** Winners bracket champion vs losers bracket champion
+- **Reset Match:** If the losers bracket champion wins the grand final, one final "true final" decides it all
+- **30-31 total matches** per tournament, each affecting ELO ratings
+
+Items are seeded by current ELO rating (1 vs 16, 8 vs 9, etc.).
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/projects/<id>/pair` | Get battle matchup |
+| POST | `/api/v1/projects/<id>/battle` | Submit battle result |
+| GET | `/api/v1/projects/<id>/rankings` | Get rankings |
+| GET | `/api/v1/projects/<id>/items` | List all items |
+| GET | `/api/v1/projects/<id>/stats` | Project statistics |
+| GET | `/api/v1/projects/<id>/history` | Battle history |
+| POST | `/api/v1/projects/<id>/tournaments` | Create tournament |
+| GET | `/api/v1/projects/<id>/tournaments/<tid>/next-match` | Get next tournament match |
+| POST | `/api/v1/projects/<id>/tournaments/<tid>/match` | Submit tournament match |
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). You’re free to use and modify the code for any purpose, provided you include a copy of the license.
+This project is licensed under the [MIT License](LICENSE).
