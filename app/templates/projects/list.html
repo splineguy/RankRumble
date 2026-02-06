@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}My Projects - ELO Ranker{% endblock %}
+{% block title %}My Projects - RankRumble{% endblock %}
 
 {% block content %}
 <div class="flex justify-between items-center mb-6">
@@ -28,16 +28,30 @@
                 <a href="{{ url_for('battles.arena', project_id=project.id) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
                     Start Battle
                 </a>
-                <a href="{{ url_for('projects.rankings', project_id=project.id) }}" class="text-gray-600 hover:text-gray-800 text-sm">
-                    View Rankings
-                </a>
+                <div class="flex gap-3">
+                    {% if project.total_items >= 16 %}
+                    <a href="{{ url_for('tournament.setup', project_id=project.id) }}" class="text-yellow-600 hover:text-yellow-800 text-sm font-medium">
+                        Tournament
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('projects.rankings', project_id=project.id) }}" class="text-gray-600 hover:text-gray-800 text-sm">
+                        Rankings
+                    </a>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
 {% else %}
     <div class="bg-white rounded-lg shadow-md p-8 text-center">
-        <div class="text-gray-400 text-5xl mb-4">📊</div>
+        <div class="flex justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300" viewBox="0 0 64 64" fill="currentColor">
+                <path d="M32 4l6 12 13 2-9.5 9 2.5 13L32 34l-12 6 2.5-13L13 18l13-2z" opacity="0.6"/>
+                <rect x="10" y="44" width="12" height="16" rx="2" opacity="0.3"/>
+                <rect x="26" y="36" width="12" height="24" rx="2" opacity="0.5"/>
+                <rect x="42" y="48" width="12" height="12" rx="2" opacity="0.2"/>
+            </svg>
+        </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">No projects yet</h2>
         <p class="text-gray-600 mb-4">Create your first ranking project to get started!</p>
         <a href="{{ url_for('projects.create_project') }}" class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700">

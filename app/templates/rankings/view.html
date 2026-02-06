@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Rankings - {{ project.name }} - ELO Ranker{% endblock %}
+{% block title %}Rankings - {{ project.name }} - RankRumble{% endblock %}
 
 {% block content %}
 <div class="mb-6">
@@ -9,7 +9,10 @@
             <a href="{{ url_for('projects.detail', project_id=project.id) }}" class="text-indigo-600 hover:text-indigo-800 text-sm">
                 &larr; Back to {{ project.name }}
             </a>
-            <h1 class="text-2xl font-bold text-gray-900 mt-2">Full Rankings</h1>
+            <h1 class="text-2xl font-bold text-gray-900 mt-2 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z"/></svg>
+                Full Rankings
+            </h1>
             <p class="text-gray-600">{{ total_items }} items ranked</p>
         </div>
         <div class="flex space-x-2">

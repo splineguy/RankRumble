@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Tournaments - {{ project.name }} - RankRumble{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <a href="{{ url_for('projects.detail', project_id=project.id) }}" class="text-indigo-600 hover:text-indigo-800 text-sm">
+        &larr; Back to {{ project.name }}
+    </a>
+    <div class="flex justify-between items-center mt-2">
+        <h1 class="text-2xl font-bold text-gray-900">Tournaments</h1>
+        {% if project['items']|length >= 16 %}
+        <a href="{{ url_for('tournament.setup', project_id=project.id) }}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+            + New Tournament
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if tournaments %}
+<div class="grid gap-4 md:grid-cols-2">
+    {% for t in tournaments %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+        <a href="{{ url_for('tournament.bracket', project_id=project.id, tournament_id=t.id) }}" class="block p-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">{{ t.name }}</h2>
+                    <div class="text-sm text-gray-500 mt-1">
+                        {{ t.match_count|default(0) }} / {{ t.total_matches|default(30) }} matches
+                    </div>
+                </div>
+                {% if t.status == 'completed' %}
+                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Complete</span>
+                {% else %}
+                <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">In Progress</span>
+                {% endif %}
+            </div>
+            {% if t.status == 'completed' and t.champion_id and t.champion_id in project['items'] %}
+            <div class="mt-3 flex items-center gap-2 text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z"/></svg>
+                <span class="text-gray-700 font-medium">{{ project['items'][t.champion_id].name }}</span>
+            </div>
+            {% endif %}
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-lg shadow-md p-8 text-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <h2 class="text-xl font-semibold text-gray-900 mb-2">No tournaments yet</h2>
+    <p class="text-gray-600 mb-4">Create a Sweet Sixteen tournament to battle your top picks!</p>
+    {% if project['items']|length >= 16 %}
+    <a href="{{ url_for('tournament.setup', project_id=project.id) }}" class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700">
+        Start Tournament
+    </a>
+    {% else %}
+    <p class="text-sm text-gray-500">You need at least 16 items to start a tournament.</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
