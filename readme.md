@@ -24,8 +24,8 @@ RankRumble is a web app that lets you rank anything using the ELO rating system.
 
 ```bash
 # Clone the repo
-git clone https://github.com/splineguy/ELO_Sorting.git
-cd ELO_Sorting
+git clone https://github.com/splineguy/RankRumble.git
+cd RankRumble
 
 # Create a virtual environment
 python -m venv venv
