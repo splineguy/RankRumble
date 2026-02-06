@@ -1,10 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Register - ELO Ranker{% endblock %}
+{% block title %}Register - RankRumble{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto">
     <div class="bg-white shadow-md rounded-lg p-8">
+        <!-- Podium Illustration -->
+        <div class="flex justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-500" viewBox="0 0 64 64" fill="currentColor">
+                <rect x="4" y="30" width="16" height="30" rx="2" opacity="0.4"/>
+                <rect x="24" y="14" width="16" height="46" rx="2" opacity="0.7"/>
+                <rect x="44" y="38" width="16" height="22" rx="2" opacity="0.3"/>
+                <text x="12" y="26" text-anchor="middle" font-size="10" font-weight="bold" fill="currentColor">2</text>
+                <text x="32" y="10" text-anchor="middle" font-size="10" font-weight="bold" fill="currentColor">1</text>
+                <text x="52" y="34" text-anchor="middle" font-size="10" font-weight="bold" fill="currentColor">3</text>
+            </svg>
+        </div>
         <h1 class="text-2xl font-bold text-center mb-6">Create Account</h1>
 
         <form method="POST" action="{{ url_for('auth.register') }}">

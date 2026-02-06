@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Champion - {{ tournament.name }} - RankRumble{% endblock %}
+
+{% block extra_css %}
+<style>
+    @keyframes confetti-fall {
+        0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+    .confetti-piece {
+        position: fixed;
+        top: -20px;
+        width: 10px;
+        height: 10px;
+        animation: confetti-fall linear forwards;
+        z-index: 50;
+        pointer-events: none;
+    }
+    @keyframes crown-bounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-10px) scale(1.1); }
+    }
+    .crown-bounce {
+        animation: crown-bounce 2s ease-in-out infinite;
+    }
+    @keyframes glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+        50% { box-shadow: 0 0 40px rgba(234, 179, 8, 0.6); }
+    }
+    .champion-glow {
+        animation: glow 2s ease-in-out infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Confetti Container -->
+<div id="confetti-container"></div>
+
+<div class="max-w-2xl mx-auto text-center">
+    <!-- Champion Announcement -->
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-8 champion-glow">
+        <div class="crown-bounce mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-yellow-500 mx-auto" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z"/>
+            </svg>
+        </div>
+        <div class="text-sm font-medium text-yellow-600 uppercase tracking-wider mb-2">Tournament Champion</div>
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">{{ champion_name }}</h1>
+        <p class="text-gray-500">{{ tournament.name }}</p>
+    </div>
+
+    <!-- Runner Up -->
+    {% if runner_up_name %}
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">Runner-Up</div>
+        <div class="text-xl font-semibold text-gray-700">{{ runner_up_name }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Tournament Stats -->
+    <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+            <div class="text-2xl font-bold text-indigo-600">{{ tournament.match_count }}</div>
+            <div class="text-sm text-gray-500">Matches Played</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+            <div class="text-2xl font-bold text-green-600">16</div>
+            <div class="text-sm text-gray-500">Contenders</div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex justify-center gap-3 flex-wrap">
+        <a href="{{ url_for('tournament.bracket', project_id=project.id, tournament_id=tournament.id) }}"
+           class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+            View Bracket
+        </a>
+        <a href="{{ url_for('tournament.setup', project_id=project.id) }}"
+           class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+            New Tournament
+        </a>
+        <a href="{{ url_for('projects.detail', project_id=project.id) }}"
+           class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+            Back to Project
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confetti effect
+const colors = ['#6366f1', '#eab308', '#ef4444', '#22c55e', '#3b82f6', '#f97316', '#a855f7'];
+const container = document.getElementById('confetti-container');
+
+for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = (Math.random() * 3 + 2) + 's';
+    piece.style.animationDelay = (Math.random() * 3) + 's';
+    piece.style.width = (Math.random() * 8 + 6) + 'px';
+    piece.style.height = (Math.random() * 8 + 6) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+    container.appendChild(piece);
+}
+
+// Clean up confetti after animations complete
+setTimeout(() => {
+    container.innerHTML = '';
+}, 8000);
+</script>
+{% endblock %}

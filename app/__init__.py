@@ -35,9 +35,11 @@ def create_app(config_name=None):
     # Initialize managers
     from app.models.user import UserManager
     from app.models.project import ProjectManager
+    from app.models.tournament import TournamentManager
 
     app.user_manager = UserManager(app.config['USERS_FILE'])
     app.project_manager = ProjectManager(app.config['PROJECTS_DIR'])
+    app.tournament_manager = TournamentManager(app.project_manager)
 
     # User loader for Flask-Login
     @login_manager.user_loader
@@ -49,11 +51,13 @@ def create_app(config_name=None):
     from app.blueprints.projects import projects_bp
     from app.blueprints.battles import battles_bp
     from app.blueprints.api import api_bp
+    from app.blueprints.tournament import tournament_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(battles_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(tournament_bp)
 
     # Root route
     @app.route('/')

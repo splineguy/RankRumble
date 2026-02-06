@@ -1,10 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Login - ELO Ranker{% endblock %}
+{% block title %}Login - RankRumble{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto">
     <div class="bg-white shadow-md rounded-lg p-8">
+        <!-- Crossed Swords Illustration -->
+        <div class="flex justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-500" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="52" x2="42" y2="12" stroke-linecap="round"/>
+                <line x1="52" y1="52" x2="22" y2="12" stroke-linecap="round"/>
+                <circle cx="32" cy="32" r="6" fill="currentColor" opacity="0.2" stroke="currentColor"/>
+                <line x1="8" y1="48" x2="16" y2="56" stroke-linecap="round"/>
+                <line x1="48" y1="48" x2="56" y2="56" stroke-linecap="round"/>
+            </svg>
+        </div>
         <h1 class="text-2xl font-bold text-center mb-6">Sign In</h1>
 
         <form method="POST" action="{{ url_for('auth.login') }}">

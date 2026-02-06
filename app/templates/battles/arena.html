@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Battle Arena - {{ project.name }} - ELO Ranker{% endblock %}
+{% block title %}Battle Arena - {{ project.name }} - RankRumble{% endblock %}
 
 {% block content %}
 <div class="mb-6">
@@ -42,7 +42,7 @@
     <div id="battle-cards" class="hidden">
         <p class="text-center text-gray-600 mb-6">Which do you prefer?</p>
 
-        <div class="grid md:grid-cols-2 gap-6">
+        <div class="grid md:grid-cols-[1fr_auto_1fr] gap-4 items-center">
             <!-- Item A -->
             <div id="card-a" class="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg hover:border-indigo-300 border-2 border-transparent transition-all relative" onclick="submitBattle('a_wins')">
                 <button onclick="deleteItem(event, 'a')" class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-bold transition-colors" title="Delete this item">
@@ -53,6 +53,16 @@
                     <div class="text-3xl font-bold text-indigo-600" id="rating-a"></div>
                     <div class="text-sm text-gray-500">Current Rating</div>
                     <div class="mt-4 text-sm text-gray-500" id="stats-a"></div>
+                </div>
+            </div>
+
+            <!-- VS Graphic -->
+            <div class="hidden md:flex items-center justify-center">
+                <div class="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-400" viewBox="0 0 64 64" fill="none">
+                        <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+                        <text x="32" y="38" text-anchor="middle" font-size="20" font-weight="bold" fill="currentColor" font-family="sans-serif">VS</text>
+                    </svg>
                 </div>
             </div>
 
@@ -85,6 +95,9 @@
 
     <!-- Result Display -->
     <div id="result" class="hidden text-center py-8">
+        <div id="result-icon" class="flex justify-center mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z"/></svg>
+        </div>
         <div id="result-message" class="text-xl font-semibold mb-4"></div>
         <div id="rating-changes" class="text-gray-600 mb-6"></div>
         <button onclick="loadNextBattle()" class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
